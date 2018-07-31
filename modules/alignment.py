@@ -27,9 +27,9 @@ def match_score(alpha, beta):
 def finalize(align1, align2):
     align1 = align1[::-1]    #reverse sequence 1
     align2 = align2[::-1]    #reverse sequence 2
-    
+
     i,j = 0,0
-    
+
     #calcuate identity, score and aligned sequeces
     symbol = ''
     found = 0
@@ -37,37 +37,33 @@ def finalize(align1, align2):
     identity = 0
     for i in range(0,len(align1)):
         # if two AAs are the same, then output the letter
-        if align1[i] == align2[i]:                
+        if align1[i] == align2[i]:
             symbol = symbol + align1[i]
             identity = identity + 1
             score += match_score(align1[i], align2[i])
-    
+
         # if they are not identical and none of them is gap
-        elif align1[i] != align2[i] and align1[i] != '-' and align2[i] != '-': 
+        elif align1[i] != align2[i] and align1[i] != '-' and align2[i] != '-':
             score += match_score(align1[i], align2[i])
             symbol += ' '
             found = 0
-    
+
         #if one of them is a gap, output a space
-        elif align1[i] == '-' or align2[i] == '-':          
+        elif align1[i] == '-' or align2[i] == '-':
             symbol += ' '
             score += gap_penalty
-    
+
     identity = float(identity) / len(align1) * 100
-    
-    print 'Identity =', "%3.3f" % identity, 'percent'
-    print 'Score =', score
-    print align1
-    print symbol
-    print align2
+
+    return {"identity": identity, "score": score, "align1": align1, "symbol": symbol, "align2": align2}
 
 
 def needle(seq1, seq2):
     m, n = len(seq1), len(seq2)  # length of two sequences
-    
+
     # Generate DP table and traceback path pointer matrix
     score = zeros((m+1, n+1))      # the DP table
-   
+
     # Calculate DP table
     for i in range(0, m + 1):
         score[i][0] = gap_penalty * i
@@ -80,7 +76,7 @@ def needle(seq1, seq2):
             insert = score[i][j - 1] + gap_penalty
             score[i][j] = max(match, delete, insert)
 
-    # Traceback and compute the alignment 
+    # Traceback and compute the alignment
     align1, align2 = '', ''
     i,j = m,n # start from the bottom right cell
     while i > 0 and j > 0: # end toching the top or the left edge
@@ -113,15 +109,15 @@ def needle(seq1, seq2):
         align2 += seq2[j-1]
         j -= 1
 
-    finalize(align1, align2)
+    return finalize(align1, align2)
 
 def water(seq1, seq2):
     m, n = len(seq1), len(seq2)  # length of two sequences
-    
+
     # Generate DP table and traceback path pointer matrix
     score = zeros((m+1, n+1))      # the DP table
     pointer = zeros((m+1, n+1))    # to store the traceback path
-    
+
     max_score = 0        # initial maximum score in DP table
     # Calculate DP table and mark pointers
     for i in range(1, m + 1):
@@ -142,11 +138,11 @@ def water(seq1, seq2):
                 max_i = i
                 max_j = j
                 max_score = score[i][j];
-    
+
     align1, align2 = '', ''    # initial sequences
-    
+
     i,j = max_i,max_j    # indices of path starting point
-    
+
     #traceback, follow pointers
     while pointer[i][j] != 0:
         if pointer[i][j] == 3:
@@ -163,4 +159,4 @@ def water(seq1, seq2):
             align2 += '-'
             i -= 1
 
-    finalize(align1, align2)
+    return finalize(align1, align2)
